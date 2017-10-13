@@ -1,0 +1,8 @@
+{
+  "name": "forecast",
+  "description": "Notify line message when it may rain.",
+  "memory": 128,
+  "timeout": 5,
+  "role": "arn:aws:iam::632303116384:role/forecast_lambda_function",
+  "environment": {}
+}
