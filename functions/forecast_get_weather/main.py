@@ -55,7 +55,7 @@ def get_weather(pref, area, dt):
 
 def get_users():
     table = dynamodb.Table(USER_TABLE)
-    attrs = ['id', 'name', 'timing', 'percent']
+    attrs = ['id', 'timing', 'percent']
     filter = {
         'active': {
             'AttributeValueList': [True],
