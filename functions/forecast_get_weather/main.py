@@ -6,9 +6,9 @@ from datetime import datetime
 from pytz import timezone
 from xml.etree import ElementTree
 
-BUCKET_NAME = 'juv-shun-forecast'  # os.environ.get(BUCKET_NAME)
-PREF_OBJ_KEY = 'settings/pref_id.yml'  # os.environ.get(PREF_OBJ_KEY)
-USER_TABLE = 'forecast_users'  # os.environ.get(USER_TABLE)
+BUCKET_NAME = os.environ.get('BUCKET_NAME')
+PREF_OBJ_KEY = os.environ.get('PREF_OBJ_KEY')
+USER_TABLE = os.environ.get('USER_TABLE')
 
 PERCENTS = [30, 40, 50]
 TIMINGS = ['06:15', '06:30', '06:45', '07:00', '07:15',
