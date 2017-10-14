@@ -56,13 +56,7 @@ def get_weather(pref, area, dt):
 def get_users():
     table = dynamodb.Table(USER_TABLE)
     attrs = ['id', 'timing', 'percent']
-    filter = {
-        'active': {
-            'AttributeValueList': [True],
-            'ComparisonOperator': 'EQ'
-        }
-    }
-    return table.scan(AttributesToGet=attrs, ScanFilter=filter)['Items']
+    return table.scan(AttributesToGet=attrs)['Items']
 
 
 def add_message(weather, users):
