@@ -1,8 +1,14 @@
 {
   "name": "forecast",
   "description": "Notify line message when it may rain.",
-  "memory": 128,
-  "timeout": 5,
+  "runtime": "python3.6",
+  "memory": 256,
+  "timeout": 300,
   "role": "arn:aws:iam::632303116384:role/forecast_lambda_function",
-  "environment": {}
+  "environment": {
+      "BUCKET_NAME": "juv-shun-forecast",
+      "PREF_OBJ_KEY": "settings/pref_id.yml",
+      "MESSAGE_OBJ_KEY": "settings/messages.yml",
+      "USER_TABLE": "forecast_users"
+  }
 }
