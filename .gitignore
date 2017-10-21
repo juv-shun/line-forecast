@@ -2,3 +2,4 @@ Dockerfile
 tmp
 test
 .DS_Store
+project.json
