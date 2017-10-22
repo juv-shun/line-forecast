@@ -56,8 +56,8 @@ class WeatherBot(LineBotApi):
         logger.info("Reply message: %s" % message)
 
         # メッセージ送信
-        # self.reply_message(message=TextSendMessage(text=message),
-        #                    token=event['replyToken'])
+        self.reply_message(message=TextSendMessage(text=message),
+                           token=event['replyToken'])
 
     def __react(self, user_id, method):
         user = User.find(user_id)

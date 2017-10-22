@@ -5,25 +5,28 @@ import yaml
 from datetime import datetime
 from pytz import timezone
 from xml.etree import ElementTree
+from logging import (getLogger, INFO)
 
 BUCKET_NAME = os.environ.get('BUCKET_NAME')
 PREF_OBJ_KEY = os.environ.get('PREF_OBJ_KEY')
-USER_TABLE = os.environ.get('USER_TABLE')
-
+TABLE_NAME = os.environ.get('TABLE_NAME')
 PERCENTS = [30, 40, 50]
 TIMINGS = ['06:15', '06:30', '06:45', '07:00', '07:15',
            '07:30', '07:45', '08:00', '08:15', '08:30', '08:45']
 
 dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(TABLE_NAME)
 s3 = boto3.resource('s3')
+logger = getLogger()
+logger.setLevel(INFO)
 
 
 def handle(event, context):
-    # 現在の東京日時を取得
     today = datetime.now(timezone('Asia/Tokyo')).date()
 
     # 天気予報を取得
     weather = get_weather(pref='東京', area='東京地方', dt=today)
+    logger.info("Today's weather: %s" % weather)
 
     # ユーザー情報を取得
     users = get_users()
@@ -33,6 +36,7 @@ def handle(event, context):
 
     # 通知スケジュールをDBに保存
     save(users)
+    logger.info("Notification: %s" % users)
 
 
 def get_weather(pref, area, dt):
@@ -54,7 +58,6 @@ def get_weather(pref, area, dt):
 
 
 def get_users():
-    table = dynamodb.Table(USER_TABLE)
     attrs = ['id', 'timing', 'percent']
     return table.scan(AttributesToGet=attrs)['Items']
 
@@ -87,7 +90,7 @@ def add_message(weather, users):
 
 
 def save(users):
-    table = dynamodb.Table(USER_TABLE)
+    table = dynamodb.Table(TABLE_NAME)
     for user in users:
         key = {'id': user['id']}
         values = {'message': {'Value': user['msg'], 'Action': 'PUT'}}
@@ -95,4 +98,10 @@ def save(users):
 
 
 if __name__ == '__main__':
+    from logging import StreamHandler, Formatter
+
+    handler = StreamHandler()
+    handler.setFormatter(Formatter('[%(levelname)s] %(message)s'))
+    logger.addHandler(handler)
+
     handle(None, None)
