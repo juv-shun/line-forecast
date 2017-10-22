@@ -1,5 +1,6 @@
 Dockerfile
 tmp
-test
+test*
 .DS_Store
 project.json
+__pycache__
