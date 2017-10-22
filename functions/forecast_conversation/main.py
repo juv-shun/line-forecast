@@ -3,26 +3,31 @@ import json
 import hashlib
 import hmac
 import base64
+from weatherbot import WeatherBot
+from logging import (getLogger, INFO)
 
 CHANNEL_ACCESS_TOKEN = os.environ.get('CHANNEL_ACCESS_TOKEN')
 CHANNEL_SECRET = os.environ.get('CHANNEL_SECRET')
 ENCODING = 'utf-8'
 
+weather_bot = WeatherBot(CHANNEL_ACCESS_TOKEN)
+logger = getLogger()
+logger.setLevel(INFO)
+
 
 def handle(event, context):
-    if is_dummy(event):
-        return 'Dummy requests.'
+    if event == {'dummy': True}:
+        return 'Dummy request.'
 
     if not verify_signature(event):
-        return 'Invalid signature.'
+        logger.warning('Invalid signature.')
+        return 'WARNING'
 
-    response(json.loads(event['body']))
+    body = json.loads(event['body'])
+    for event in body['events']:
+        weather_bot.reply(event)
 
     return 'OK'
-
-
-def is_dummy(event):
-    return 'dummy' in event.keys() and event['dummy'] is True
 
 
 def verify_signature(event):
@@ -38,9 +43,8 @@ def verify_signature(event):
         return False
 
 
-def response(req):
-    print(req)
-
-
 if __name__ == '__main__':
-    handle(None, None)
+    with open('test/full_event.json', 'r') as rf:
+        event = json.load(rf)
+    res = handle(event, None)
+    print(res)
