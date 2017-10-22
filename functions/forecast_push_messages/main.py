@@ -1,33 +1,36 @@
 import os
 import boto3
 import yaml
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import timezone
 from linebot import LineBotApi
 from linebot.models import TextSendMessage
+from logging import (getLogger, INFO)
 
 BUCKET_NAME = os.environ.get('BUCKET_NAME')
 HOLIDAY_OBJ_KEY = os.environ.get('HOLIDAY_OBJ_KEY')
 MESSAGE_OBJ_KEY = os.environ.get('MESSAGE_OBJ_KEY')
-USER_TABLE = os.environ.get('USER_TABLE')
-LINE_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN')
+TABLE_NAME = os.environ.get('TABLE_NAME')
+CHANNEL_ACCESS_TOKEN = os.environ.get('CHANNEL_ACCESS_TOKEN')
 
 dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table(TABLE_NAME)
 s3 = boto3.resource('s3')
-line_bot = LineBotApi(LINE_TOKEN)
+line_bot = LineBotApi(CHANNEL_ACCESS_TOKEN)
+logger = getLogger()
+logger.setLevel(INFO)
 
 
 def handle(event, context):
     # 現在の東京時間を取得
     time = datetime.now(timezone('Asia/Tokyo'))
-    time = datetime(2017, 10, 14, 6, 15)
 
     # 祝日なら通知しない
     if is_holiday(time.date()):
         return 'OK'
 
     # 取得時刻の誤差を修正
-    time = round_time(time.minute)
+    time = round_time(time)
 
     # ユーザー情報を取得
     users = get_users_by_timing(time)
@@ -39,22 +42,21 @@ def handle(event, context):
 def is_holiday(dt):
     obj = s3.Object(BUCKET_NAME, HOLIDAY_OBJ_KEY)
     holidays = yaml.load(obj.get()['Body'].read())
-    if dt in holidays.keys():
-        return True
-    else:
-        return False
+    return dt in holidays.keys()
 
 
-def round_time(min):
-    minutes = [0, 15, 30, 45]
-    if min in [minute+1 for minute in minutes]:
-        return min - 1
-    else:
-        return min
+def round_time(time):
+    base_minutes = [0, 15, 30, 45]
+    for base_minute in base_minutes:
+        min_diff = time.minute - base_minute
+        if -1 <= min_diff and min_diff <= 3:
+            return time - timedelta(minutes=min_diff)
+
+    logger.error('Unknown timing')
+    raise Exception
 
 
 def get_users_by_timing(time):
-    table = dynamodb.Table(USER_TABLE)
     attrs = ['id', 'active', 'message', 'name']
     filter = {
         'active': {
@@ -80,7 +82,15 @@ def send_messages(users, messages):
         if user['active']:
             message = TextSendMessage(text=messages[user['message']])
             line_bot.push_message(user['id'], message)
+            logger.info("Notification: %s -> %s"
+                        % (user['name'], user['message']))
 
 
 if __name__ == '__main__':
+    from logging import StreamHandler, Formatter
+
+    handler = StreamHandler()
+    handler.setFormatter(Formatter('[%(levelname)s] %(message)s'))
+    logger.addHandler(handler)
+
     handle(None, None)
