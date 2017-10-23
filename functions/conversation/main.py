@@ -17,6 +17,7 @@ logger.setLevel(INFO)
 
 def handle(event, context):
     if event == {'dummy': True}:
+        logger.info('dummy.')
         return 'Dummy request.'
 
     if not verify_signature(event):

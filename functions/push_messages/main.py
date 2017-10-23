@@ -27,6 +27,7 @@ def handle(event, context):
 
     # 祝日なら通知しない
     if is_holiday(time.date()):
+        logger.info('it is national holiday.')
         return 'OK'
 
     # 取得時刻の誤差を修正
@@ -34,6 +35,8 @@ def handle(event, context):
 
     # ユーザー情報を取得
     users = get_users_by_timing(time)
+    if len(users) == 0:
+        logger.info('there is no users to push message.')
 
     # 各ユーザにメッセージを送信
     send_messages(users, get_messages())
