@@ -31,17 +31,14 @@ def handle(event, context):
     return 'OK'
 
 
-def verify_signature(event):
-    hash = hmac.new(CHANNEL_SECRET.encode(ENCODING),
-                    event['body'].encode(ENCODING),
-                    hashlib.sha256).digest()
-    h_signature = event['headers']['X-Line-Signature'].encode(ENCODING)
-    b_signature = base64.b64encode(hash)
+def verify_signature(request):
+    line_sign = request['headers']['X-Line-Signature']
+    body = request['body']
 
-    if b_signature == h_signature:
-        return True
-    else:
-        return False
+    hash = hmac.new(CHANNEL_SECRET.encode(ENCODING),
+                    body.encode(ENCODING), hashlib.sha256).digest()
+
+    return base64.b64encode(hash) == line_sign.encode(ENCODING)
 
 
 if __name__ == '__main__':
