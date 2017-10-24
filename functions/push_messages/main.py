@@ -82,7 +82,7 @@ def get_messages():
 
 def send_messages(users, messages):
     for user in users:
-        if user['active']:
+        if user['active'] is True and user['message'] is not None:
             message = TextSendMessage(text=messages[user['message']])
             line_bot.push_message(user['id'], message)
             logger.info("Notification: %s -> %s"
