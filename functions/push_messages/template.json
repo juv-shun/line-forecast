@@ -1,0 +1,12 @@
+{
+    "description": "",
+    "environment": {
+        "HOLIDAY_OBJ_KEY": "",
+        "MESSAGE_OBJ_KEY": "",
+        "CHANNEL_ACCESS_TOKEN": ""
+    },
+    "hooks": {
+        "build": "pip install -r requirements.txt -t .",
+        "clean": "ls | grep -v -E '(.py$|requirements.txt|.json$)' | xargs rm -r"
+    }
+}

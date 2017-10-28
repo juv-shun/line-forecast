@@ -1,0 +1,10 @@
+{
+    "description": "",
+    "environment": {
+        "PREF_OBJ_KEY": ""
+    },
+    "hooks": {
+        "build": "pip install -r requirements.txt -t .",
+        "clean": "ls | grep -v -E '(.py$|requirements.txt|.json$)' | xargs rm -r"
+    }
+}

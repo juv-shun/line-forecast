@@ -1,0 +1,11 @@
+{
+    "name": "forecast",
+    "runtime": "python3.6",
+    "memory": 128,
+    "timeout": 5,
+    "role": "arn:aws:iam::<user_id>:role/<role_name>",
+    "environment": {
+        "BUCKET_NAME": "",
+        "TABLE_NAME": ""
+    }
+}
