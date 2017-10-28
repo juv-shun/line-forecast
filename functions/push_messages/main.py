@@ -24,6 +24,7 @@ logger.setLevel(INFO)
 def handle(event, context):
     # 現在の東京時間を取得
     time = datetime.now(timezone('Asia/Tokyo'))
+    # time = datetime(2017, 10, 27, 7, 30)
 
     # 祝日なら通知しない
     if is_holiday(time.date()):
