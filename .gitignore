@@ -1,6 +1,7 @@
-Dockerfile
-tmp
-test*
 .DS_Store
-project.json
 __pycache__
+test*
+vendor
+
+project*.json
+function*.json
