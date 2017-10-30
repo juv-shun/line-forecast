@@ -83,12 +83,10 @@ def get_messages():
 
 def send_messages(users, messages):
     for user in users:
-        logger.info("Notification: %s -> %s" % (user['name'], user['message']))
+        logger.info(f"Notification. {user['name']}: {user['message']}")
         if user['active'] is True and user['message'] != 'none':
             message = TextSendMessage(text=messages[user['message']])
             line_bot.push_message(user['id'], message)
-        else:
-            logger.info('Needless to notice.')
 
 
 if __name__ == '__main__':
