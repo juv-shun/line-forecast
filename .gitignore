@@ -5,3 +5,4 @@ vendor
 
 project*.json
 function*.json
+/s3
