@@ -4,10 +4,6 @@
     "memory": 128,
     "timeout": 5,
     "role": "arn:aws:iam::632303116384:role/forecast_lambda_function",
-    "environment": {
-        "BUCKET_NAME": "juv-shun-forecast",
-        "TABLE_NAME": "test_forecast_users"
-    },
     "hooks": {
         "build": "pip install -r requirements.txt -t .",
         "clean": "ls | grep -v -E '(\\.py$|^requirements\\.txt$)' | xargs rm -r"
