@@ -16,17 +16,29 @@ weather_bot = WeatherBot(os.environ.get('CHANNEL_ACCESS_TOKEN'))
 def handle(event, context):
     if event == {'dummy': True}:
         logger.info('dummy.')
-        return 'Dummy request.'
+        return {
+            "statusCode": 200,
+            "headers": {},
+            "body": "Dummy request."
+        }
 
     if not verify_signature(event):
         logger.warning('Invalid signature.')
-        return 'WARNING'
+        return {
+            "statusCode": 200,
+            "headers": {},
+            "body": "Invalid signature."
+        }
 
     body = json.loads(event['body'])
     for event in body['events']:
         weather_bot.reply(event)
 
-    return 'OK'
+    return {
+        "statusCode": 200,
+        "headers": {},
+        "body": "ok"
+    }
 
 
 def verify_signature(request):
