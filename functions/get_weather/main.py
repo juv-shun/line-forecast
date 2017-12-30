@@ -1,28 +1,21 @@
 import os
+import logging
+from xml.etree import ElementTree
+
+import arrow
 import boto3
 import requests
 import yaml
-from datetime import datetime
-from pytz import timezone
-from xml.etree import ElementTree
-from logging import (getLogger, INFO)
 
-BUCKET_NAME = os.environ.get('BUCKET_NAME')
-PREF_OBJ_KEY = os.environ.get('PREF_OBJ_KEY')
-TABLE_NAME = os.environ.get('TABLE_NAME')
-PERCENTS = [30, 40, 50]
-TIMINGS = ['06:15', '06:30', '06:45', '07:00', '07:15',
-           '07:30', '07:45', '08:00', '08:15', '08:30', '08:45']
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(TABLE_NAME)
 s3 = boto3.resource('s3')
-logger = getLogger()
-logger.setLevel(INFO)
+dynamodb = boto3.resource('dynamodb')
 
 
 def handle(event, context):
-    today = datetime.now(timezone('Asia/Tokyo')).date()
+    today = arrow.get(event['time']).to('Asia/Tokyo')
 
     # 天気予報を取得
     weather = get_weather(pref='東京', area='東京地方', dt=today)
@@ -41,23 +34,24 @@ def handle(event, context):
 
 def get_weather(pref, area, dt):
     # 都道府県名から都道府県IDを取得
-    obj = s3.Object(BUCKET_NAME, PREF_OBJ_KEY)
+    obj = s3.Object(os.environ.get('BUCKET_NAME'),
+                    os.environ.get('PREF_OBJ_KEY'))
     pref_ids = yaml.load(obj.get()['Body'].read())
     pref_id = pref_ids[pref]
 
     # URL先からxml情報を取得し、解析
-    url = "http://www.drk7.jp/weather/xml/%s.xml" % pref_id
-    res = requests.get(url)
+    res = requests.get(f"http://www.drk7.jp/weather/xml/{pref_id}.xml")
     res.encoding = 'UTF-8'
 
-    path = ".//area[@id='%s']/info[@date='%s']/rainfallchance/period"\
-           % (area, dt.strftime('%Y/%m/%d'))
+    dt = dt.strftime('%Y/%m/%d')
+    path = f".//area[@id='{area}']/info[@date='{dt}']/rainfallchance/period"
 
     return {elem.get('hour'): int(elem.text)
             for elem in ElementTree.fromstring(res.text).findall(path)}
 
 
 def get_users():
+    table = dynamodb.Table(os.environ.get('TABLE_NAME'))
     attrs = ['id', 'timing', 'percent']
     return table.scan(AttributesToGet=attrs)['Items']
 
@@ -90,7 +84,7 @@ def add_message(weather, users):
 
 
 def save(users):
-    table = dynamodb.Table(TABLE_NAME)
+    table = dynamodb.Table(os.environ.get('TABLE_NAME'))
     for user in users:
         key = {'id': user['id']}
         values = {'message': {'Value': user['msg'], 'Action': 'PUT'}}
@@ -98,10 +92,8 @@ def save(users):
 
 
 if __name__ == '__main__':
-    from logging import StreamHandler, Formatter
-
-    handler = StreamHandler()
-    handler.setFormatter(Formatter('[%(levelname)s] %(message)s'))
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
     logger.addHandler(handler)
 
-    handle(None, None)
+    handle({'time': '2017-12-30T22:00:00Z'}, None)
