@@ -1,14 +1,12 @@
 import os
-import boto3
-from logging import getLogger, DEBUG
+import logging
 
-TABLE_NAME = os.environ.get('TABLE_NAME')
+import boto3
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(TABLE_NAME)
 
-logger = getLogger(__name__)
-logger.setLevel(DEBUG)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 class User():
@@ -17,6 +15,7 @@ class User():
 
     @classmethod
     def find(cls, user_id):
+        table = dynamodb.Table(os.environ.get('TABLE_NAME'))
         res = table.get_item(Key={'id': user_id})
         if 'Item' in res:
             if res['Item'].keys() == cls.__columns:
@@ -46,6 +45,7 @@ class User():
         self.message = message
 
     def save(self):
+        table = dynamodb.Table(os.environ.get('TABLE_NAME'))
         item = {'id': self.id,
                 'name': self.name,
                 'timing': self.timing,

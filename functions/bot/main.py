@@ -3,16 +3,14 @@ import json
 import hashlib
 import hmac
 import base64
+import logging
+
 from weatherbot import WeatherBot
-from logging import (getLogger, INFO)
 
-CHANNEL_ACCESS_TOKEN = os.environ.get('CHANNEL_ACCESS_TOKEN')
-CHANNEL_SECRET = os.environ.get('CHANNEL_SECRET')
-ENCODING = 'utf-8'
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-weather_bot = WeatherBot(CHANNEL_ACCESS_TOKEN)
-logger = getLogger()
-logger.setLevel(INFO)
+weather_bot = WeatherBot(os.environ.get('CHANNEL_ACCESS_TOKEN'))
 
 
 def handle(event, context):
@@ -35,10 +33,10 @@ def verify_signature(request):
     line_sign = request['headers']['X-Line-Signature']
     body = request['body']
 
-    hash = hmac.new(CHANNEL_SECRET.encode(ENCODING),
-                    body.encode(ENCODING), hashlib.sha256).digest()
+    hash = hmac.new(os.environ.get('CHANNEL_SECRET').encode('utf-8'),
+                    body.encode('utf-8'), hashlib.sha256).digest()
 
-    return base64.b64encode(hash) == line_sign.encode(ENCODING)
+    return base64.b64encode(hash) == line_sign.encode('utf-8')
 
 
 if __name__ == '__main__':

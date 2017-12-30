@@ -1,16 +1,18 @@
 import os
+import logging
+
 import yaml
 import boto3
 from linebot import LineBotApi
 from linebot.models import TextSendMessage
-from logging import getLogger, DEBUG
+
 from user import User
 
 BUCKET_NAME = os.environ.get('BUCKET_NAME')
 MESSAGE_OBJ_KEY = os.environ.get('MESSAGE_OBJ_KEY')
 
-logger = getLogger(__name__)
-logger.setLevel(DEBUG)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 
 def load_message():
