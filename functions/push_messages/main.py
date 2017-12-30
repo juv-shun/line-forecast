@@ -1,30 +1,21 @@
 import os
+import logging
+import json
+
+import arrow
 import boto3
 import yaml
-from datetime import datetime, timedelta
-from pytz import timezone
-from linebot import LineBotApi
-from linebot.models import TextSendMessage
-from logging import (getLogger, INFO)
 
-BUCKET_NAME = os.environ.get('BUCKET_NAME')
-HOLIDAY_OBJ_KEY = os.environ.get('HOLIDAY_OBJ_KEY')
-MESSAGE_OBJ_KEY = os.environ.get('MESSAGE_OBJ_KEY')
-TABLE_NAME = os.environ.get('TABLE_NAME')
-CHANNEL_ACCESS_TOKEN = os.environ.get('CHANNEL_ACCESS_TOKEN')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table(TABLE_NAME)
 s3 = boto3.resource('s3')
-line_bot = LineBotApi(CHANNEL_ACCESS_TOKEN)
-logger = getLogger()
-logger.setLevel(INFO)
+dynamodb = boto3.resource('dynamodb')
+sns = boto3.resource('sns')
 
 
 def handle(event, context):
-    # 現在の東京時間を取得
-    time = datetime.now(timezone('Asia/Tokyo'))
-    # time = datetime(2017, 10, 27, 7, 30)
+    time = arrow.get(event['time']).to('Asia/Tokyo')
 
     # 祝日なら通知しない
     if is_holiday(time.date()):
@@ -44,7 +35,8 @@ def handle(event, context):
 
 
 def is_holiday(dt):
-    obj = s3.Object(BUCKET_NAME, HOLIDAY_OBJ_KEY)
+    obj = s3.Object(os.environ.get('BUCKET_NAME'),
+                    os.environ.get('HOLIDAY_OBJ_KEY'))
     holidays = yaml.load(obj.get()['Body'].read())
     return dt in holidays.keys()
 
@@ -54,13 +46,14 @@ def round_time(time):
     for base_minute in base_minutes:
         min_diff = time.minute - base_minute
         if -1 <= min_diff and min_diff <= 3:
-            return time - timedelta(minutes=min_diff)
+            return time.replace(minutes=min_diff * -1)
 
     logger.error('Unknown timing')
     raise Exception
 
 
 def get_users_by_timing(time):
+    table = dynamodb.Table(os.environ.get('TABLE_NAME'))
     attrs = ['id', 'active', 'message', 'name']
     filter = {
         'active': {
@@ -76,24 +69,30 @@ def get_users_by_timing(time):
 
 
 def get_messages():
-    obj = s3.Object(BUCKET_NAME, MESSAGE_OBJ_KEY)
+    obj = s3.Object(os.environ.get('BUCKET_NAME'),
+                    os.environ.get('MESSAGE_OBJ_KEY'))
     messages = yaml.load(obj.get()['Body'].read())
     return messages['weather_notice']
 
 
 def send_messages(users, messages):
+    topic = sns.Topic(os.environ.get('TOPIC_ARN'))
+
     for user in users:
         logger.info(f"Notification. {user['name']}: {user['message']}")
-        if user['active'] is True and user['message'] != 'none':
-            message = TextSendMessage(text=messages[user['message']])
-            line_bot.push_message(user['id'], message)
+        if user['message'] != 'none':
+            message = {
+                'users': [user['id']],
+                'text': messages[user['message']],
+                'access_token': os.environ.get('LINE_ACCESS_TOKEN')
+            }
+            logger.info(json.dumps(message, ensure_ascii=False, indent=3))
+            topic.publish(Message=json.dumps(message))
 
 
 if __name__ == '__main__':
-    from logging import StreamHandler, Formatter
-
-    handler = StreamHandler()
-    handler.setFormatter(Formatter('[%(levelname)s] %(message)s'))
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
     logger.addHandler(handler)
 
-    handle(None, None)
+    handle({'time': '2017-12-28T22:45:00Z'}, None)
