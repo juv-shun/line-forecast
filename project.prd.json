@@ -3,7 +3,7 @@
     "runtime": "python3.6",
     "memory": 128,
     "timeout": 5,
-    "role": "arn:aws:iam::632303116384:role/forecast_lambda_function",
+    "role": "arn:aws:iam::100994446770:role/forecast_lambda_function",
     "hooks": {
         "build": "pip install -r requirements.txt -t .",
         "clean": "ls | grep -v -E '(\\.py$|^requirements\\.txt$)' | xargs rm -r"
