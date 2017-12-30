@@ -3,6 +3,5 @@ __pycache__
 test*
 vendor
 
-project*.json
-function*.json
-/s3
+functions/*/function*.json
+/local
