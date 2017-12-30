@@ -14,12 +14,14 @@ weather_bot = WeatherBot(os.environ.get('CHANNEL_ACCESS_TOKEN'))
 
 
 def handle(event, context):
+    logger.info(json.dumps(event, ensure_ascii=False, indent=3))
+
     if event == {'dummy': True}:
         logger.info('dummy.')
         return {
             "statusCode": 200,
             "headers": {},
-            "body": "Dummy request."
+            "body": json.dumps("Dummy request.")
         }
 
     if not verify_signature(event):
@@ -27,17 +29,24 @@ def handle(event, context):
         return {
             "statusCode": 200,
             "headers": {},
-            "body": "Invalid signature."
+            "body": json.dumps("Invalid signature.")
         }
 
     body = json.loads(event['body'])
+    logger.info(json.dumps(body, ensure_ascii=False, indent=3))
+
     for event in body['events']:
-        weather_bot.reply(event)
+        # replyTokenが下記の場合、テスト用
+        if event['replyToken'] == '00000000000000000000000000000000'\
+                or event['replyToken'] == 'ffffffffffffffffffffffffffffffff':
+            logger.info("It is connection test.")
+        else:
+            weather_bot.reply(event)
 
     return {
         "statusCode": 200,
         "headers": {},
-        "body": "ok"
+        "body": json.dumps("ok")
     }
 
 

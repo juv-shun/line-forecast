@@ -12,7 +12,7 @@ BUCKET_NAME = os.environ.get('BUCKET_NAME')
 MESSAGE_OBJ_KEY = os.environ.get('MESSAGE_OBJ_KEY')
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 def load_message():
