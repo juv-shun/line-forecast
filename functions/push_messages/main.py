@@ -23,7 +23,7 @@ def handle(event, context):
         return 'OK'
 
     # 取得時刻の誤差を修正
-    time = round_time(time)
+    time = time.replace(minutes=time.minute % 5 * -1)
 
     # ユーザー情報を取得
     users = get_users_by_timing(time)
@@ -39,17 +39,6 @@ def is_holiday(dt):
                     os.environ.get('HOLIDAY_OBJ_KEY'))
     holidays = yaml.load(obj.get()['Body'].read())
     return dt in holidays.keys()
-
-
-def round_time(time):
-    base_minutes = [0, 15, 30, 45]
-    for base_minute in base_minutes:
-        min_diff = time.minute - base_minute
-        if -1 <= min_diff and min_diff <= 3:
-            return time.replace(minutes=min_diff * -1)
-
-    logger.error('Unknown timing')
-    raise Exception
 
 
 def get_users_by_timing(time):
