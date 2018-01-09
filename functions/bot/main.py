@@ -17,7 +17,6 @@ def handle(event, context):
     logger.info(json.dumps(event, ensure_ascii=False, indent=3))
 
     if event == {'dummy': True}:
-        logger.info('dummy.')
         return {
             "statusCode": 200,
             "headers": {},
