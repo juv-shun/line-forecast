@@ -1,14 +1,14 @@
-import os
-import json
+import base64
 import hashlib
 import hmac
-import base64
+import json
 import logging
+import os
 
 from weatherbot import WeatherBot
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(getattr(logging, os.getenv("LOG_LEVEL", "INFO")))
 
 weather_bot = WeatherBot(os.environ.get('CHANNEL_ACCESS_TOKEN'))
 

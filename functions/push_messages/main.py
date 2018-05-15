@@ -1,13 +1,15 @@
-import os
-import logging
 import json
+import logging
+import os
 
 import arrow
+
 import boto3
+
 import yaml
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(getattr(logging, os.getenv("LOG_LEVEL", "INFO")))
 
 s3 = boto3.resource('s3')
 dynamodb = boto3.resource('dynamodb')
