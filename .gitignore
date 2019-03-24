@@ -2,6 +2,7 @@
 __pycache__
 test*
 vendor
+.terraform
 
 functions/*/function*.json
 /local
