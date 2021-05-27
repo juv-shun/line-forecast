@@ -8,12 +8,43 @@
 AWS LambdaとAWS API Gatewayで構築。
 以下の3つのlambda関数から構成されている。
 
-- **get_weather**  
-天気予報を取得するlambda関数。起動タイミングは毎朝6:00(JST)頃。
-＜処理＞
-    1. インターネットから天気予報情報を取得してRDSへ天気情報を保存。
-    1. 天気情報とユーザ情報から誰にどのタイミングでどんなメッセージを通知するかを表す予定情報を作成し、DBへ保存。
-- **push_notice**  
-起動された時刻と予定情報から、LINEでメッセージを送る相手と内容を判定しプッシュ通知を送る。
-- **line_bot**  
+- **weather_manager**
+天気予報を取得し、登録ユーザ各々に対する送信メッセージを決める。
+- **notificator**
+lambda起動時刻とユーザが設定した送信時刻が一致した場合、LINEメッセージを送信する。
+- **linebot**
 ユーザ登録・解除、通知時刻、通知条件（降水確率）をLINEトーク上で行う。
+
+
+## How to run on your local
+
+### Dynamo DB local setting
+
+```sh
+$ sls dynamodb start &
+$ npx dynamodb-admin &
+```
+
+### Environment Variables
+
+```sh
+export DYNAMODB_TABLE=dummy
+export S3_BUCKET=dummy
+export S3_MESSAGE_OBJ_KEY=dummy
+export LINE_ACCESS_TOKEN=dummy
+export LINE_CHANNEL_SECRET=dummy
+```
+
+### weather_manager, notificator
+
+```sh
+$ sls invoke local -f weather_manager -e IS_LOCAL=true
+$ sls invoke local -f notificator -d '{"time": "2021-05-26T23:31:00Z"}' -e IS_LOCAL=true
+```
+
+### linebot
+
+```sh
+$ sls offline
+$ curl -H 'x-line-signature: dummy' http://localhost:3000/ -d @src/linebot/testdata.json
+```

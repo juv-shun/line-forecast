@@ -1,0 +1,126 @@
+service: line-forecast
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: 20201221
+  region: ap-northeast-1
+  stackName: sls-line-forecast
+  deploymentBucket: juv-shun.sls-deployment-bucket
+  logRetentionInDays: 7
+  environment:
+    DYNAMODB_TABLE: ${env:DYNAMODB_TABLE}
+    S3_BUCKET: ${env:S3_BUCKET}
+    S3_MESSAGE_OBJ_KEY: ${env:S3_MESSAGE_OBJ_KEY}
+    LINE_ACCESS_TOKEN: ${env:LINE_ACCESS_TOKEN}
+    LINE_CHANNEL_SECRET: ${env:LINE_CHANNEL_SECRET}
+  memorySize: 128
+  timeout: 120
+  iam:
+    role:
+      name: line-forecast-role
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:Scan
+            - dynamodb:UpdateItem
+            - dynamodb:PutItem
+          Resource:
+            - arn:aws:dynamodb:ap-northeast-1:100994446770:table/${env:DYNAMODB_TABLE}
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+          Resource:
+            - arn:aws:s3:::${env:S3_BUCKET}/*
+
+package:
+  patterns:
+    - src/__init__.py
+
+functions:
+  weather_manager:
+    name: line-forecast-weather-manager
+    description: 天気予報を取得し、DynamoDBに格納されている各ユーザへメッセージをセットする関数
+    handler: src.weather_manager.handler.handle
+    package:
+      patterns:
+        - src/weather_manager/*.py
+    events:
+      - schedule:
+          name: line-forecast-get-weather-time
+          description: Every 6:00 on weekdays for line-forecast
+          rate: cron(0 21 ? * Sun-Thu *)
+
+  notificator:
+    name: line-forecast-notificator
+    description: 各ユーザに天気情報のPush通知を送信する関数
+    handler: src.notificator.handler.handle
+    package:
+      patterns:
+        - src/notificator/*.py
+    events:
+      - schedule:
+          name: line-forecast-notification-time1
+          description: Every 5 minutes in weekday morning (6:00~9:00)
+          rate: cron(*/5 21-23 ? * Sun-Thu *)
+      - schedule:
+          name: line-forecast-notification-time2
+          description: Every 5 minutes in weekday morning (9:00-10:00)
+          rate: cron(*/5 0 ? * Mon-Fri *)
+
+  linebot:
+    name: line-forecast-linebot
+    description: 天気予報通知の設定を行うBOTの関数
+    handler: src.linebot.handler.handle
+    package:
+      patterns:
+        - src/linebot/*.py
+    events:
+      - httpApi:
+          method: POST
+          path: /
+
+plugins:
+  - serverless-prune-plugin
+  - serverless-python-requirements
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  prune:
+    automatic: true
+    number: 3
+  dynamodb:
+    stages:
+      - dev
+    start:
+      inMemory: true
+      migrate: true
+      seed: true
+    seed:
+      development:
+        sources:
+          - table: ${env:DYNAMODB_TABLE}
+            sources: [./dynamodb_local/records.json]
+
+resources:
+  Resources:
+    ForecastTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${env:DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+    ForecastBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${env:S3_BUCKET}

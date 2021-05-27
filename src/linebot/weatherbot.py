@@ -1,15 +1,15 @@
+import json
 import os
 import logging
 
-import yaml
 import boto3
 from linebot import LineBotApi
 from linebot.models import TextSendMessage
 
-from user import User
+from .user import User
 
-BUCKET_NAME = os.environ.get('BUCKET_NAME')
-MESSAGE_OBJ_KEY = os.environ.get('MESSAGE_OBJ_KEY')
+S3_BUCKET = os.environ['S3_BUCKET']
+S3_MESSAGE_OBJ_KEY = os.environ['S3_MESSAGE_OBJ_KEY']
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -17,8 +17,8 @@ logger.setLevel(logging.INFO)
 
 def load_message():
     s3 = boto3.resource('s3')
-    obj = s3.Object(BUCKET_NAME, MESSAGE_OBJ_KEY)
-    message = yaml.load(obj.get()['Body'].read())
+    obj = s3.Object(S3_BUCKET, S3_MESSAGE_OBJ_KEY)
+    message = json.load(obj.get()['Body'])
     return message['reaction']
 
 
