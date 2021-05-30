@@ -34,6 +34,11 @@ provider:
             - s3:GetObject
           Resource:
             - arn:aws:s3:::${env:S3_BUCKET}/*
+        - Effect: Allow
+          Action:
+            - sns:Publish
+          Resource:
+            - !Ref ForecastDLQTopic
 
 package:
   patterns:
@@ -52,6 +57,8 @@ functions:
           name: line-forecast-get-weather-time
           description: Every 6:00 on weekdays for line-forecast
           rate: cron(0 21 ? * Sun-Thu *)
+    destinations:
+      onFailure: arn:aws:sns:ap-northeast-1:${env:AWS_ACCOUNT_ID}:line-forecast-failed # !Ref is not supported yet.
 
   notificator:
     name: line-forecast-notificator
@@ -69,6 +76,8 @@ functions:
           name: line-forecast-notification-time2
           description: Every 5 minutes in weekday morning (9:00-10:00)
           rate: cron(*/5 0 ? * Mon-Fri *)
+    destinations:
+      onFailure: arn:aws:sns:ap-northeast-1:${env:AWS_ACCOUNT_ID}:line-forecast-failed # !Ref is not supported yet.
 
   linebot:
     name: line-forecast-linebot
@@ -81,6 +90,8 @@ functions:
       - httpApi:
           method: POST
           path: /
+    destinations:
+      onFailure: arn:aws:sns:ap-northeast-1:${env:AWS_ACCOUNT_ID}:line-forecast-failed # !Ref is not supported yet.
 
 plugins:
   - serverless-prune-plugin
@@ -124,3 +135,10 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${env:S3_BUCKET}
+    ForecastDLQTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: line-forecast-failed
+        Subscription:
+          - Endpoint: shun.fukusumi@gmail.com
+            Protocol: email

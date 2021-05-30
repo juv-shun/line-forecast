@@ -33,6 +33,7 @@ export S3_BUCKET=dummy
 export S3_MESSAGE_OBJ_KEY=dummy
 export LINE_ACCESS_TOKEN=dummy
 export LINE_CHANNEL_SECRET=dummy
+export AWS_ACCOUNT_ID=dummy
 ```
 
 ### weather_manager, notificator
