@@ -20,15 +20,17 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm ci
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
           python-version: 3.9
+      - name: Install Dependencies
+        run: |
+          npm install serverless -g
+          npm ci
       - name: serverless deploy
-        uses: serverless/github-action@v3.1
-        with:
-          args: deploy
+        run: |
+          sls deploy
         env:
           DYNAMODB_TABLE: ${{secrets.DYNAMODB_TABLE}}
           S3_BUCKET: ${{secrets.S3_BUCKET}}
