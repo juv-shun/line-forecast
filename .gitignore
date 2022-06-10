@@ -4,3 +4,7 @@ node_modules
 dynamodb_local/*.json
 src/linebot/testdata.json
 tmp
+
+__pycache__/
+*.py[cod]
+*$py.class
