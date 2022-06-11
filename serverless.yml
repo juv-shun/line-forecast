@@ -7,7 +7,9 @@ provider:
   lambdaHashingVersion: 20201221
   region: ap-northeast-1
   stackName: sls-line-forecast
-  deploymentBucket: juv-shun.sls-deployment-bucket
+  deploymentBucket:
+    name: juv-shun.sls-deployment-bucket
+    maxPreviousDeploymentArtifacts: 3
   logRetentionInDays: 7
   environment:
     DYNAMODB_TABLE: ${env:DYNAMODB_TABLE}
