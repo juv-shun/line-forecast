@@ -1,11 +1,11 @@
 {
   "dependencies": {
-    "serverless-prune-plugin": "^1.5.0",
-    "serverless-python-requirements": "^5.1.1"
+    "serverless-prune-plugin": "^2.0.1",
+    "serverless-python-requirements": "^5.4.0"
   },
   "devDependencies": {
-    "dynamodb-admin": "^4.0.1",
-    "serverless-dynamodb-local": "^0.2.39",
-    "serverless-offline": "^7.0.0"
+    "dynamodb-admin": "^4.4.0",
+    "serverless-dynamodb-local": "^0.2.40",
+    "serverless-offline": "^8.8.0"
   }
 }
