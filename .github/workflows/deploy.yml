@@ -20,10 +20,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 15
+          cache: npm
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+          cache: pip
       - name: Install Dependencies
         run: |
           npm install serverless -g
