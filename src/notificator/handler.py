@@ -1,11 +1,10 @@
+import datetime
 import json
 import logging
 import os
-import datetime
 from typing import Any, Dict, List
 
 import arrow
-
 import boto3
 
 from linebot import LineBotApi
@@ -14,9 +13,7 @@ from linebot.models import TextSendMessage
 logger = logging.getLogger(__name__)
 logger.setLevel(getattr(logging, os.getenv("LOG_LEVEL", "INFO")))
 
-dynamo_config = (
-    {"endpoint_url": "http://localhost:8000"} if os.getenv("IS_LOCAL", False) else {}
-)
+dynamo_config = {"endpoint_url": "http://localhost:8000"} if os.getenv("IS_LOCAL", False) else {}
 dynamodb = boto3.resource("dynamodb", **dynamo_config)
 s3 = boto3.resource("s3")
 linebot = LineBotApi(os.environ["LINE_ACCESS_TOKEN"])
@@ -50,11 +47,7 @@ def get_push_messages() -> Dict[str, str]:
 
 
 def handle(event, context):
-    now = (
-        arrow.get(event["time"])
-        if isinstance(event, dict) and "time" in event
-        else arrow.now()
-    )
+    now = arrow.get(event["time"]) if isinstance(event, dict) and "time" in event else arrow.now()
     now = now.to("Asia/Tokyo")
 
     if is_holiday(now):
@@ -66,16 +59,12 @@ def handle(event, context):
 
     messages = get_push_messages()
     for user in get_users_by_timing(now.time()):
-        if arrow.get(user["last_updated"]) - arrow.now().to(
-            "Asia/Tokyo"
-        ) > datetime.timedelta(hours=20):
+        if arrow.get(user["last_updated"]) - arrow.now().to("Asia/Tokyo") > datetime.timedelta(hours=20):
             logger.warn("weather is not updated over 20 hours")
             continue
         if user["message"] == "none":
             continue
-        linebot.push_message(
-            user["id"], TextSendMessage(text=messages[user["message"]])
-        )
+        linebot.push_message(user["id"], TextSendMessage(text=messages[user["message"]]))
         logger.info(f"to: {user['name']}, message: {messages[user['message']]}")
 
 

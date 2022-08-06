@@ -1,17 +1,14 @@
-import os
 import logging
+import os
 from typing import Optional
 
 import arrow
-
 import boto3
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-dynamo_config = (
-    {"endpoint_url": "http://localhost:8000"} if os.getenv("IS_LOCAL", False) else {}
-)
+dynamo_config = {"endpoint_url": "http://localhost:8000"} if os.getenv("IS_LOCAL", False) else {}
 dynamodb = boto3.resource("dynamodb", **dynamo_config)
 
 DYNAMODB_TABLE = os.environ["DYNAMODB_TABLE"]

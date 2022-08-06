@@ -5,17 +5,13 @@ from typing import Any, Dict, List, Optional
 from xml.etree import ElementTree
 
 import arrow
-
 import boto3
-
 import requests
 
 logger = logging.getLogger(__name__)
 logger.setLevel(getattr(logging, os.getenv("LOG_LEVEL", "INFO")))
 
-dynamo_config = (
-    {"endpoint_url": "http://localhost:8000"} if os.getenv("IS_LOCAL", False) else {}
-)
+dynamo_config = {"endpoint_url": "http://localhost:8000"} if os.getenv("IS_LOCAL", False) else {}
 dynamodb = boto3.resource("dynamodb", **dynamo_config)
 
 WEATHER_API_URL = "http://www.drk7.jp/weather/xml/13.xml"
@@ -35,10 +31,7 @@ def get_weather(dt: date) -> Dict[str, Optional[int]]:
     date_ = dt.strftime("%Y/%m/%d")
     path = f".//area[@id='東京地方']/info[@date='{date_}']/rainfallchance/period"
 
-    return {
-        elem.get("hour"): get_int(elem.text)
-        for elem in ElementTree.fromstring(res.text).findall(path)
-    }
+    return {elem.get("hour"): get_int(elem.text) for elem in ElementTree.fromstring(res.text).findall(path)}
 
 
 def get_users() -> List[Dict[str, Any]]:
@@ -47,9 +40,7 @@ def get_users() -> List[Dict[str, Any]]:
     return table.scan(AttributesToGet=attrs)["Items"]
 
 
-def add_message(
-    weather: Dict[str, Optional[int]], users: List[Dict[str, Any]]
-) -> List[Dict[str, Any]]:
+def add_message(weather: Dict[str, Optional[int]], users: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     r1 = weather["06-12"]
     r2 = weather["12-18"]
     r3 = weather["18-24"]
@@ -89,11 +80,7 @@ def save(users: List[Dict[str, Any]]) -> None:
 
 
 def handle(event, context):
-    now = (
-        arrow.get(event["time"])
-        if isinstance(event, dict) and "time" in event
-        else arrow.now()
-    )
+    now = arrow.get(event["time"]) if isinstance(event, dict) and "time" in event else arrow.now()
     weather = get_weather(dt=now.to("Asia/Tokyo").date())
     logger.info("Today's weather: %s" % weather)
 

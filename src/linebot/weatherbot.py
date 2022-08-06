@@ -1,8 +1,9 @@
 import json
-import os
 import logging
+import os
 
 import boto3
+
 from linebot import LineBotApi
 from linebot.models import TextSendMessage
 
@@ -47,9 +48,7 @@ class WeatherBot(LineBotApi):
 
         # テキストが送信されてきた場合の対応
         if event["type"] == "message" and event["message"]["type"] == "text":
-            logger.info(
-                "Input type: message, Input message: %s" % event["message"]["text"]
-            )
+            logger.info("Input type: message, Input message: %s" % event["message"]["text"])
             result = self.__react(user_id=user_id, method=event["message"]["text"])
 
         # フォローされた場合の対応
@@ -67,9 +66,7 @@ class WeatherBot(LineBotApi):
         logger.info("Reply message: %s" % message)
 
         # メッセージ送信
-        self.reply_message(
-            messages=TextSendMessage(text=message), reply_token=event["replyToken"]
-        )
+        self.reply_message(messages=TextSendMessage(text=message), reply_token=event["replyToken"])
 
     def __react(self, user_id, method):
         user = User.find(user_id)
