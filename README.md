@@ -21,6 +21,7 @@ lambda起動時刻とユーザが設定した送信時刻が一致した場合�
 ### Dynamo DB local setting
 
 ```sh
+$ sls dynamodb install
 $ sls dynamodb start &
 $ npx dynamodb-admin &
 ```
